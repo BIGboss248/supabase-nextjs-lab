@@ -10,9 +10,21 @@ A learning lab: Supabase × Next.js 16, expressed as a minimal e-commerce storef
 | The map | [issue #1](https://github.com/BIGboss248/supabase-nextjs-lab/issues/1) — every decision taken, and the fog ahead |
 | Research | [`docs/research/`](docs/research/) — primary-source findings, one file per ticket |
 
-Read `docs/PLAN.md` and the map before proposing work. The plan is the state of the build; do not infer progress from the presence or absence of files.
+Read `docs/PLAN.md`, the map, and [`.agents/autofix.json`](.agents/autofix.json) before proposing work. The plan is the state of the build; do not infer progress from the presence or absence of files. The ruleset is the set of corrections already paid for; see *Self-repair*.
+
+**Cite the subject, not just the number.** Every reference to a GitHub issue carries its title alongside its number — `#10 Resolve the component naming convention conflict`, never `#10` alone. Applies to chat, comments, commits, notes, and PR bodies.
 
 ## Agent skills
+
+### Self-repair
+
+Durable corrections for this repo live in [`.agents/autofix.json`](.agents/autofix.json). Load that file through the `self-repair` skill at the start of every session, before planning or editing, and treat the entries that touch the task as hard constraints rather than suggestions.
+
+- **Scope.** Repo rules govern this repo and layer on the vault ruleset at `D:\Scripts\Obsidian\.agents\autofix.json`. Where the two conflict, the repo rule wins, and the override names the vault rule number it supersedes — the env-file decision under *Toolchain facts* is the live example.
+- **Precedence.** Within a ruleset the higher `Rule_number` wins. A rule that contradicts the current codebase is a finding: surface it, do not obey it silently.
+- **When to add.** The user corrects the output or rejects a pattern; the user states a preference or says "remember this"; a bug traces back to a wrong assumption. Not a one-off task instruction, and not a rule about recording rules.
+- **How.** Append one imperative sentence — "Never/Always X — because Y" — with a `Category` and a short `Why`, plus the `Issue` when a ticket produced it. Keep the file valid JSON at two-space indent, merge overlaps, renumber `1..N`, and name the new rule number in the reply.
+- **Prefer a check.** If the constraint is mechanical (banned import, file location, command shape), propose a lint rule, hook, or CI job instead of another prose rule.
 
 ### Issue tracker
 

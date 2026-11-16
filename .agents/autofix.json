@@ -1,0 +1,8 @@
+[
+  {
+    "Rule_number": 1,
+    "Category": "PROCESS",
+    "Instruction": "In every grilling session ('grilling' skill or any other HITL interview round), format each question as a heading line '❓ Q<n> - <question subject>', with n counting the questions in that round from Q1; put the question text on the next line as plain prose; then list the proposed answers as a numbered list where each item is the answer text alone and, only when that answer carries code, the code block sits below the text separated by a blank line, never inline or sharing a line with the text. Mark the recommended answer inside its own text with '(Recommended)' and ask the whole round before waiting for answers.",
+    "Why": "user explicit instruction: grilling questions use a numbered red-question-mark heading, a prose question, and numbered answers whose code blocks are separated from the answer text"
+  }
+]
