@@ -70,26 +70,30 @@ Sources: [Local development with the CLI](https://supabase.com/docs/guides/local
 **Learn**
 - Row Level Security as default-deny: a table with RLS on and no policy returns nothing, to everyone.
 - Policy granularity — per command (`select`/`insert`/`update`/`delete`), per role (`anon`, `authenticated`), with `using` versus `with check` doing different jobs.
-- Why `service_role` bypasses RLS, and why that key must never reach a client bundle.
+- Why `service_role` bypasses RLS, and why that key must never reach a client bundle. Read here, not demonstrated: this app holds no secret key (issue #2).
+- `security definer` as the alternative to a bypass key, and the trap it carries — the function runs with owner rights, so **the `execute` grant is the authorisation**. Grant it to `anon` and you have published a write endpoint.
 - Migrations as the durable artifact: how local schema changes become committed SQL.
 
 Sources: [Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security), the `supabase-postgres-best-practices` agent skill.
 
 **Build**
-- A migration creating `products` (identity, `slug` unique, `name`, `description`, `price` in minor units, `currency`, `stock`, `image_url`, `published`, timestamps)
-- RLS enabled, with `anon` and `authenticated` able to `SELECT` published rows only
-- `products` added to the `supabase_realtime` publication
-- `supabase/seed.sql` with enough rows to make the listing page real, including a sold-out and a low-stock case
+- One migration, three labelled sections in dependency order: `products` (`uuid` key, `slug` unique, `name`, `description`, `price_minor` whole units, `currency`, `stock` non-negative, `image_url` nullable, `published` false by default, timestamps with an `updated_at` trigger) → access → publication. No `category`, no `rating`.
+- RLS enabled, one `SELECT` policy `to anon, authenticated using (published = true)`, and no write policy at all
+- `insert`/`update`/`delete`/`truncate` revoked from `anon, authenticated`, so deleting the policy does not re-open writes
+- `sell_one_unit(uuid)` — `security definer`, `search_path` pinned, atomic conditional decrement, execute granted to `authenticated` only
+- `products` added to the `supabase_realtime` publication in a guarded block (re-running must not error), with no `replica identity full`
+- `supabase/seed.sql`: 8 realistic products — 4 in stock, 1 sold out, 1 low stock, 2 drafts — plus remote image URLs
 
 **Verify**
 - Anonymous `select` returns published rows only; unpublished rows are invisible.
-- Anonymous `insert`/`update`/`delete` are refused.
+- Anonymous `insert`/`update`/`delete` are refused — and still refused with the `SELECT` policy deleted, because the grants are gone too.
+- `sell_one_unit` with an anonymous key is refused; with a signed-in session it decrements, and at zero it returns no row rather than an error.
 - `supabase db diff` is clean after committing the migration.
 - A fresh `supabase stop --no-backup` + `start` reproduces the whole schema from migrations plus seed.
 
 **Record** — `SupaBase.md`: sharpen the RLS section with `using` vs `with check` and the default-deny consequence. Lab note: the exact policy SQL, and the fact that **Realtime authorises against RLS per subscriber** — a policy mistake shows up as silence, not an error.
 
-> Open ticket: the schema is not yet locked (issue #2). Do not author the migration before it closes.
+> Closed in [#2](https://github.com/BIGboss248/supabase-nextjs-lab/issues/2): schema and posture fixed. Random-UUID key with slug addressing; read-only RLS plus withdrawn write grants; `sellOneUnit` is a `security definer` function granted to signed-in users only, so the app holds no secret key; update-only broadcast; one migration, three labelled sections.
 
 ---
 
@@ -116,7 +120,7 @@ Sources: [Row Level Security](https://supabase.com/docs/guides/database/postgres
 
 **Record** — lab note: the seam, why two ports and not five, and the concrete cost of the alternative (thin repositories leaking Supabase types into every caller).
 
-> Open ticket: signatures and error taxonomy (issue #3).
+> Open ticket: signatures and error taxonomy (issue #3) — now including a write operation on `ProductCatalog` and an `out_of_stock` case, per #2.
 
 ---
 
@@ -189,7 +193,7 @@ Sources: `docs/research/supabase-realtime-rls.md`.
 - `/products/[slug]` — detail page, 404 on unknown slug
 - A client component that subscribes to `UPDATE` on `products.stock` and reconciles into the server-rendered list
 - A refetch on every `SUBSCRIBED` and on `visibilitychange`, since the stream has no replay
-- A dev-only `sellOneUnit` Server Action as a write trigger
+- A dev-only `sellOneUnit` Server Action as a write trigger — signed-in only, since the function's `execute` grant is `authenticated` (#2)
 
 **Verify**
 - Editing `stock` in Studio changes the open page within a second, with no reload.
