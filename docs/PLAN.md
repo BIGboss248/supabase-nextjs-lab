@@ -50,6 +50,7 @@ These are settled. Do not re-open them mid-phase; if one is wrong, that is a new
 Sources: [Local development with the CLI](https://supabase.com/docs/guides/local-development/cli/getting-started), [Next.js quickstart](https://supabase.com/docs/guides/getting-started/quickstarts/nextjs), [Next.js proxy docs](https://nextjs.org/docs/app/api-reference/file-conventions/proxy).
 
 **Build**
+- The selected rows of [the setup feature inventory](#setup-feature-inventory) that land in this phase — no other phase can start before the scaffold exists
 - `npx create-next-app@latest` — TypeScript, App Router, Tailwind, `src/` directory
 - `npx supabase init`, then `npx supabase start`
 - `.env.local` + `.env.example` carrying `NEXT_PUBLIC_SUPABASE_URL` and the publishable key
@@ -236,6 +237,53 @@ Sources: `docs/research/supabase-cli-ci.md`.
 > Open tickets: CI research (#8), test strategy (#9), hosted provisioning (#12).
 
 ---
+
+## Setup feature inventory
+
+Two setup skills expose independent feature menus: `setup-repository` (F-series, repository hygiene) and `nextjs-dev-setup` (N-series, framework and tests). Neither has run here — the repo holds no `docs/project.json`, no `.agents/setup-features.json`, and no `.agents/nextjs-setup-features.json`.
+
+This table is **placement, not selection**. Which features run is decided in each skill's own Phase 1 interview, one selection file per skill, and both merge into the same `docs/project.json`. Acceptance checks live in the skills' runbooks and are not restated here.
+
+### `setup-repository`
+
+| Id | Feature | Lands in | Proposed |
+|---|---|---|---|
+| F1 | Project metadata — `docs/project.json` | Phase 1 | on |
+| F2 | Project contract — `AGENTS.md`, `autofix.json`, standards | Phase 1 | on, merge only: `AGENTS.md` is hand-written here, so there is no machine block to overwrite |
+| F3 | MCP servers and code intelligence | Phase 1 | your call — `AGENTS.md:89` and vault rule #61 both require a recommended set to be approved before anything is registered |
+| F4 | Git hooks — Husky, commitlint | Phase 1 | on for commitlint; the pre-push hook belongs to Phase 7 |
+| F5 | Production Docker | — | off — see Deliberate omissions: no app deploy |
+| F6 | GitHub repository provisioning | Phase 1 | verify only — remote, issues and labels already exist, and `--license`/`--gitignore` can overwrite `README.md` |
+| F7 | Issues and triage infrastructure | Phase 1 | merge — labels and `docs/agents/` already carry this; the issue templates are the missing half |
+| F8 | Release Please | — | off — v1 ships no versioned artifact for a changelog to describe |
+| F9 | Branch protection | Phase 7, after the first green run | off until `ci.yml` exists, then on — requiring a check that has never run blocks every push |
+| F11 | Next.js internationalization | — | off — single locale is a deliberate omission |
+| F12 | Planning workflow | Phase 1 | verify, not add — wayfinder and this plan are already the workflow; use the runbook as an audit |
+| F13 | Code scanning — CodeQL, non-blocking | Phase 7 | on — public repo, TypeScript supported; a notify job, never a required check |
+
+### `nextjs-dev-setup`
+
+| Id | Feature | Lands in | Proposed |
+|---|---|---|---|
+| N1 | Project metadata — `docs/project.json` | Phase 1 | merge into the same file as F1, under `nextjs_setup_features` |
+| N2 | Framework core and app shell | Phase 1 | on — `create-next-app` is already the plan's first build step |
+| N3 | App icons and PWA manifest | — | skip — no deployed app means no install surface |
+| N4 | Internationalization — `next-intl` | — | **off, despite the skill defaulting it on** — the plan rules i18n out; turning it on is a new decision, not a default |
+| N5 | Jest unit testing | Phase 3 | on — the contract suite needs a runner, and the fake adapter makes the first tests cheap |
+| N6 | Playwright E2E | Phase 7 | on — it carries the signup → confirm → sign in → `/account` loop |
+| N7 | Storybook | Phase 6, if at all | off by default — the listing states are visible in the running app |
+| N8 | Design-system lint | Phase 6 | on — the first real components land there |
+| N13 | Theming and dark mode | Phase 6 | your call — token plumbing is cheap once components exist, but nothing in the plan needs it |
+| N11 | Production Docker and reverse proxy | — | off — same reason as F5 |
+| N12 | Git hooks and CI/CD | Phase 7 | on — overlaps F4; run one hooks pass, and let pre-push run unit plus E2E (vault rule #4) |
+
+### What this surfaces
+
+- **N4 and the omission disagree.** The skill defaults i18n on; the plan rules it out. Leaving it off is consistent; wanting it means amending the omission explicitly.
+- **Ordering is a real constraint.** F9 may only name a check that already runs on `main`, and N12's pre-push must not point at a script that does not exist yet.
+- **Two skills, one file.** Both write `docs/project.json`; F2 and F12 also append to `AGENTS.md`, so they run as merges against the existing hand-written contract.
+- **Four features assume shipping.** F5, F8, N3 and N11 all exist to deploy an app that v1 deliberately does not deploy.
+- **F3 cannot be unattended.** MCP registration needs your approval before it happens.
 
 ## Deliberate omissions
 
