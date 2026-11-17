@@ -34,6 +34,7 @@ These are settled. Do not re-open them mid-phase; if one is wrong, that is a new
 | No cache layer in v1 | supabase-js never opts into Next's cache, and nothing opts in by default — reads are uncached because no one asked, not because a cache is bypassed |
 | Server Actions are the mutation surface | Auth flows in v1, plus the dev `sellOneUnit` action |
 | `.env.local` + `.env.example` | An explicit exception to vault rule #39 |
+| PascalCase files across `src/` and `tests/` ([ADR 0001](adr/0001-file-naming-conventions.md)) | One case for modules and components; the vault's `snake_case` rule does not apply here |
 | Seven phases with Learn / Build / Verify / Record | Every phase produces both code and a note |
 
 ---
@@ -54,12 +55,14 @@ Sources: [Local development with the CLI](https://supabase.com/docs/guides/local
 - `npx create-next-app@latest` — TypeScript, App Router, Tailwind, `src/` directory
 - `npx supabase init`, then `npx supabase start`
 - `.env.local` + `.env.example` carrying `NEXT_PUBLIC_SUPABASE_URL` and the publishable key
+- An `eslint-plugin-check-file` rule enforcing [ADR 0001](adr/0001-file-naming-conventions.md), so a lowercase component fails lint rather than review
 - A `README` section listing the local ports, so you stop re-Googling them
 
 **Verify**
 - `npx supabase status` reports every service healthy.
 - Studio answers on 54323; Mailpit on 54324.
 - The Next app boots against the local URL with no auth wired yet.
+- A component file named `product_card.tsx` fails lint; `ProductCard.tsx` passes.
 - `npx supabase stop` then `start` again preserves your data.
 
 **Record** — lab note: the port table, what `init` generates, and the fact that **the CLI reads `config.toml`, not your `.env` files**. That one will bite you when a secret "doesn't arrive".
@@ -121,7 +124,7 @@ Sources: [Row Level Security](https://supabase.com/docs/guides/database/postgres
 
 **Record** — lab note: the seam, why two ports and not five, and the concrete cost of the alternative (thin repositories leaking Supabase types into every caller).
 
-> Open ticket: signatures and error taxonomy (issue #3) — now including a write operation on `ProductCatalog` and an `out_of_stock` case, per #2.
+> Closed in [#3](https://github.com/BIGboss248/supabase-nextjs-lab/issues/3) — **Define the port signatures and error taxonomy**: seven methods across two ports; one `Product` DTO with no `published` field; nine-variant `AppError` with diagnostic messages and UI-owned copy; Zod parsing inside the adapter; a request-scoped, cookie-bound factory behind a single `server-only` door; a fake that models stock rules but not RLS; one contract suite with a gated Supabase half. File names follow [ADR 0001](adr/0001-file-naming-conventions.md), which supersedes the kebab-case paths in that resolution and nothing else.
 
 ---
 
@@ -151,7 +154,7 @@ Sources: [Server-side auth](https://supabase.com/docs/guides/auth/server-side), 
 
 **Record** — `SupaBase.md`: the `getUser`/`getSession` distinction and the cookie-write constraint. Lab note: the **Next 16 `middleware.ts` → `proxy.ts` rename**, since every tutorial you find predates it.
 
-> Open tickets: SSR research (#4), auth flow decision (#5).
+> Open tickets: auth flow decision (#5).
 
 ---
 
@@ -205,7 +208,7 @@ Sources: `docs/research/supabase-realtime-rls.md`.
 
 **Record** — `SupaBase.md`: extend the Realtime section with RLS authorisation. Lab note: the fetch-cache bypass, with the "why is my list stale / why is it not cached" pair of symptoms.
 
-> Open tickets: realtime research (#6), realtime surface decision (#7).
+> Open tickets: realtime surface decision (#7).
 
 ---
 
@@ -234,7 +237,7 @@ Sources: `docs/research/supabase-cli-ci.md`.
 
 **Record** — lab note: the pipeline diagram in text, the pinned versions, the drift mistake, and the free-tier limits you actually hit.
 
-> Open tickets: CI research (#8), test strategy (#9), hosted provisioning (#12).
+> Open tickets: test strategy (#9), hosted provisioning (#12).
 
 ---
 
