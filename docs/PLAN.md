@@ -233,21 +233,26 @@ Sources: `docs/research/supabase-realtime-rls.md`.
 Sources: `docs/research/supabase-cli-ci.md`.
 
 **Build**
-- Unit tests at the port layer; component tests for the listing states
-- A Playwright E2E covering signup/login/logout and the protected route
-- `.github/workflows/ci.yml` — the PR quality gate
+- Jest through `next/jest`: unit tests on the fake, the shared contract suite with its Supabase half behind `SUPABASE_CONTRACT=1`, and component tests for card, badge and empty state
+- pgTAP files under `supabase/tests/` covering the RLS posture and `sell_one_unit`, run in their own rolled-back transactions
+- A Playwright E2E covering signup → Mailpit → confirm → `/account`, sign-out, and the protected route
+- `.github/workflows/ci.yml` — the PR quality gate: `typecheck`, `lint`, `build`, then `db start`, `db lint --fail-on error`, `db diff --strict-coverage`
+- A full-stack job on a `full-stack` label and nightly, running contract-real, pgTAP and Playwright against one started stack
 - `.github/workflows/deploy-db.yml` — migrations on `main`, triggered only by changes under `supabase/`
 - A hosted project, linked, with secrets set
 
 **Verify**
 - A deliberately failing test fails the PR, and a red PR cannot merge.
+- The pre-push hook catches a failing lint, typecheck or unit test before it reaches CI, and finishes fast enough that `--no-verify` never looks tempting.
+- The `full-stack` job fails on a broken policy, a broken confirmation link, or a broken selector — each step independently, after one stack startup.
 - Merging a migration to `main` pushes it to the hosted project, and re-running the job is a no-op rather than an error.
 - Local schema and hosted schema agree: `supabase db diff --linked` is empty.
-- The pre-push hook catches a failing unit test before it reaches CI.
 
 **Record** — lab note: the pipeline diagram in text, the pinned versions, the drift mistake, and the free-tier limits you actually hit.
 
-> Open tickets: test strategy (#9), hosted provisioning (#12).
+> Open tickets: hosted provisioning (#12).
+>
+> Closed in [#9](https://github.com/BIGboss248/supabase-nextjs-lab/issues/9) — **Decide the test strategy and quality gates**: Jest via `next/jest`, one runner only; four thin layers (unit on the fake, contract against both adapters, component on presentational pieces, E2E on the auth loop); the Supabase half gated by `SUPABASE_CONTRACT=1` and reported as skipped; pgTAP for RLS and `sell_one_unit`, never on the PR path because it needs a full stack plus `pg_prove`; E2E reuses a local stack and, in CI, shares one experimental-path stack with the contract-real and pgTAP steps on a `full-stack` label and nightly; pre-push is lint plus typecheck plus unit plus contract, which overrides the vault's unit-and-E2E shape; retries twice with a trace on the first retry and no coverage threshold; the untested list is named rather than assumed.
 
 ---
 
@@ -282,13 +287,13 @@ This table is **placement, not selection**. Which features run is decided in eac
 | N2 | Framework core and app shell | Phase 1 | on — `create-next-app` is already the plan's first build step |
 | N3 | App icons and PWA manifest | — | skip — no deployed app means no install surface |
 | N4 | Internationalization — `next-intl` | — | **off, despite the skill defaulting it on** — the plan rules i18n out; turning it on is a new decision, not a default |
-| N5 | Jest unit testing | Phase 3 | on — the contract suite needs a runner, and the fake adapter makes the first tests cheap |
-| N6 | Playwright E2E | Phase 7 | on — it carries the signup → confirm → sign in → `/account` loop |
+| N5 | Jest unit testing | Phase 3 | on — Jest through `next/jest`, the only runner in the repo ([#9](https://github.com/BIGboss248/supabase-nextjs-lab/issues/9)) |
+| N6 | Playwright E2E | Phase 7 | on — it carries the signup → confirm → sign in → `/account` loop, on a `full-stack` label and nightly rather than every PR ([#9](https://github.com/BIGboss248/supabase-nextjs-lab/issues/9)) |
 | N7 | Storybook | Phase 6, if at all | off by default — the listing states are visible in the running app |
 | N8 | Design-system lint | Phase 6 | on — the first real components land there |
 | N13 | Theming and dark mode | Phase 6 | on — decided in [#11](https://github.com/BIGboss248/supabase-nextjs-lab/issues/11): shadcn `ThemeProvider` over `next-themes`, `class` strategy, system default, header toggle |
 | N11 | Production Docker and reverse proxy | — | off — same reason as F5 |
-| N12 | Git hooks and CI/CD | Phase 7 | on — overlaps F4; run one hooks pass, and let pre-push run unit plus E2E (vault rule #4) |
+| N12 | Git hooks and CI/CD | Phase 7 | on — overlaps F4; run one hooks pass, and let pre-push run lint, typecheck, unit and contract only — the E2E needs a full stack, so it lives on the `full-stack` label and nightly ([#9](https://github.com/BIGboss248/supabase-nextjs-lab/issues/9), which overrides vault rule #4 here) |
 
 ### What this surfaces
 
