@@ -1,18 +1,12 @@
 [
   {
     "Rule_number": 1,
-    "Category": "PROCESS",
-    "Instruction": "In every grilling session ('grilling' skill or any other HITL interview round), ask one question at a time and wait for that answer before asking the next, formatting each question as four parts in this order, separated by blank lines: a heading line '❓ Q<n> - <subject>' with n counting from Q1 for the session, no bold and no em dash, subject 3 to 8 words with no question mark; then 'Description for clarification: <one or two sentences saying what the question is about, why it matters, and any constraint the answer must respect>'; then the question itself as one sentence ending in '?'; then the answers as a numbered list '1.' to 'n.' where each item is the answer text alone, never a bullet and never inline prose, with '(Recommended)' inside the text of the answer you recommend and, only when that answer contains code, a fenced block directly below the answer line, indented to align with the answer text and before the next number.",
-    "Why": "user explicit instruction: grilling rounds use a plain numbered red-question-mark heading, a description line, a one-sentence question, numbered answers, and code blocks indented beneath the answer they belong to; one question is asked at a time"
-  },
-  {
-    "Rule_number": 2,
     "Category": "ARCH",
     "Instruction": "In this repo ('d:/Scripts/supabase-nextjs-lab'), name every hand-written '.ts'/'.tsx' file under 'src/' and 'tests/' in PascalCase after the thing it defines ('src/core/ports/ProductCatalog.ts', 'src/components/catalog/ProductCard.tsx', 'tests/contract/ProductCatalog.fake.test.ts'); put role markers as lowercase dotted segments after the base name ('.client.tsx', '.skeleton.tsx', '.test.tsx', '.stories.tsx', '.contract.ts'); leave framework-fixed names lowercase ('page', 'layout', 'loading', 'error', 'not-found', 'template', 'route', 'proxy'); keep 'src/adapters/supabase/index.ts' as the only lowercase module entry; keep directories lowercase single words ('catalog/', 'header/', 'ui/'); place components as flat files at 'src/components/<surface>/' with no per-component folders, no 'global/' folder and no barrels; export components as named exports except in Next's reserved files, which require a default export; and prefix both the file name and the export of any client component with 'Client' ('ClientStockBadge.tsx' exports 'ClientStockBadge') and carry that prefix into its companions ('ClientStockBadge.skeleton.tsx' exports 'ClientStockBadgeSkeleton').",
     "Why": "issue #10 user decisions (2026-11-17): PascalCase across the whole tree, named exports, surface folders, Client prefix even on companions, dotted lowercase roles; recorded in docs/adr/0001-file-naming-conventions.md"
   },
   {
-    "Rule_number": 3,
+    "Rule_number": 2,
     "Category": "PROCESS",
     "Instruction": "Treat this repo's '.agents/autofix.json' as the only ruleset that applies in 'd:/Scripts/supabase-nextjs-lab': never layer, import, or consult the Obsidian vault's ruleset for work here, and when a rule from elsewhere is worth keeping, re-add it locally with its origin named in 'Why'.",
     "Why": "user instruction 2026-11-17 (issue #10, grilling answer): the vault ruleset covers other projects and does not apply here; origin vault rule 78. AGENTS.md still says repo rules layer on the vault ruleset — that sentence is stale, and rule 3 governs."
