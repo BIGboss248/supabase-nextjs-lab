@@ -31,6 +31,7 @@ These are settled. Do not re-open them mid-phase; if one is wrong, that is a new
 | `create-next-app@latest` on Next 16, hand-wired `@supabase/ssr` | You write the cookie plumbing, so you learn it |
 | Ports and adapters (`ProductCatalog`, `AuthService`) | Nothing outside an adapter knows Supabase exists |
 | `Result<T>`, never thrown errors at the boundary | Callers handle failure explicitly |
+| Dark mode from the first component, via shadcn's `ThemeProvider` over `next-themes` ([#11](https://github.com/BIGboss248/supabase-nextjs-lab/issues/11)) | The server never learns the theme; the first correct paint comes from the provider's inline script, not from SSR |
 | No cache layer in v1 | supabase-js never opts into Next's cache, and nothing opts in by default — reads are uncached because no one asked, not because a cache is bypassed |
 | Server Actions are the mutation surface | Auth flows in v1, plus the dev `sellOneUnit` action |
 | `.env.local` + `.env.example` | An explicit exception to vault rule #39 |
@@ -196,11 +197,13 @@ Sources: [Server-side auth](https://supabase.com/docs/guides/auth/server-side), 
 Sources: `docs/research/supabase-realtime-rls.md`.
 
 **Build**
-- `/` — listing: server-rendered grid, Suspense boundary, empty state, sold-out and low-stock states
+- `/` — listing: server-rendered 3-up card grid (prototype variant A, [#11](https://github.com/BIGboss248/supabase-nextjs-lab/issues/11)), Suspense boundary, empty state, sold-out and low-stock states, stock badge as a dot plus word in the card corner
 - `/products/[slug]` — detail page, 404 on unknown slug
-- A client component that subscribes to `UPDATE` on `products.stock` and reconciles into the server-rendered list
-- A refetch on every `SUBSCRIBED` and on `visibilitychange`, since the stream has no replay
-- A dev-only `sellOneUnit` Server Action as a write trigger — signed-in only, since the function's `execute` grant is `authenticated` (#2)
+- Dark mode wired in the same pass: shadcn `ThemeProvider` composed into the app's providers, `class` on `<html>`, `defaultTheme="system"`, header toggle offering light / dark / system
+- A client component that holds the rows the Server Component passed as props and subscribes to `UPDATE` on `products.stock`, merging `payload.new` by `id`; `payload.old` is never read, because under RLS it carries the primary key only
+- A refetch through `router.refresh()` on every `SUBSCRIBED` and on `visibilitychange`, since the stream has no replay; the client's state adopts the new props through an effect, so the channel survives the refresh
+- One shared Zod schema in the core layer parses the realtime patch — the one write into client state that bypasses the adapter
+- A dev-only `sellOneUnit` Server Action behind a `NODE_ENV !== 'production'` guard, writing as the signed-in user through `sell_one_unit` — the function's `execute` grant is `authenticated` only ([#2](https://github.com/BIGboss248/supabase-nextjs-lab/issues/2) Lock the products schema and RLS posture) — with the button on each card rendered only when signed in
 
 **Verify**
 - Editing `stock` in Studio changes the open page within a second, with no reload.
@@ -208,10 +211,14 @@ Sources: `docs/research/supabase-realtime-rls.md`.
 - Navigating away and back does not accumulate duplicate subscriptions.
 - Sleeping the tab and returning does not leave a stale list.
 - The listing page is uncached: a Studio `INSERT` appears on reload without any revalidation step.
+- Bird's-eye: a dropped event or a slept tab costs one refetch, never a wrong number that stays wrong; an inserted row appears on reload, not live.
+- No realtime E2E exists — the merge is unit-tested and the socket is checked by hand, so that gap is named in the record rather than implied away.
 
 **Record** — `SupaBase.md`: extend the Realtime section with RLS authorisation. Lab note: the fetch-cache bypass, with the "why is my list stale / why is it not cached" pair of symptoms.
 
-> Open tickets: realtime surface decision (#7).
+> Closed in [#11](https://github.com/BIGboss248/supabase-nextjs-lab/issues/11) — **Prototype the product listing page**: variant A wins, a 3-up shelf grid whose six cards are the RLS ceiling rather than a taste call (eight seed rows minus two drafts); the stock badge is a dot plus word in the card corner, because that is what animates; `/products/[slug]` stays its own route; dark mode ships from the first component through `next-themes`, with the toggle in the header and `resolvedTheme` guarded while it is `undefined`.
+>
+> Closed in [#7](https://github.com/BIGboss248/supabase-nextjs-lab/issues/7) — **Decide the realtime demo surface and the dev write trigger**: `UPDATE` on `products.stock` only, so no `INSERT`/`DELETE` handling and no `replica identity full`; a Studio edit proves the database drives it, and an env-guarded, signed-in `sellOneUnit` writing as the user through `sell_one_unit` proves the UI reacts; the page stays a Server Component and hands the rows down, `router.refresh()` is the only refetch path, and the state follows the props through an effect so the channel survives; the merge is by `id` under one shared Zod schema, with refetch on `SUBSCRIBED` and `visibilitychange`; ordering is unguarded and inserts are not live, both accepted and self-healing.
 
 ---
 
@@ -279,7 +286,7 @@ This table is **placement, not selection**. Which features run is decided in eac
 | N6 | Playwright E2E | Phase 7 | on — it carries the signup → confirm → sign in → `/account` loop |
 | N7 | Storybook | Phase 6, if at all | off by default — the listing states are visible in the running app |
 | N8 | Design-system lint | Phase 6 | on — the first real components land there |
-| N13 | Theming and dark mode | Phase 6 | your call — token plumbing is cheap once components exist, but nothing in the plan needs it |
+| N13 | Theming and dark mode | Phase 6 | on — decided in [#11](https://github.com/BIGboss248/supabase-nextjs-lab/issues/11): shadcn `ThemeProvider` over `next-themes`, `class` strategy, system default, header toggle |
 | N11 | Production Docker and reverse proxy | — | off — same reason as F5 |
 | N12 | Git hooks and CI/CD | Phase 7 | on — overlaps F4; run one hooks pass, and let pre-push run unit plus E2E (vault rule #4) |
 
