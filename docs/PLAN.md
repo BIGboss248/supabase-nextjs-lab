@@ -154,7 +154,7 @@ Sources: [Server-side auth](https://supabase.com/docs/guides/auth/server-side), 
 
 **Record** — `SupaBase.md`: the `getUser`/`getSession` distinction and the cookie-write constraint. Lab note: the **Next 16 `middleware.ts` → `proxy.ts` rename**, since every tutorial you find predates it.
 
-> Open tickets: auth flow decision (#5).
+> Closed in [#5](https://github.com/BIGboss248/supabase-nextjs-lab/issues/5) — **Decide the auth flow and the protected-route surface**: the session guard lives in `/account` and the proxy only refreshes; the matcher stays broad because Server Actions are POSTs to their own route; `AuthService` gains `confirmEmail`, an addendum on [#3](https://github.com/BIGboss248/supabase-nextjs-lab/issues/3).
 
 ---
 
@@ -162,21 +162,24 @@ Sources: [Server-side auth](https://supabase.com/docs/guides/auth/server-side), 
 
 **Learn**
 - Server Actions as the mutation surface: what they replace, and how they interact with forms and progressive enhancement.
-- Email confirmation as a loop you can actually test locally (Mailpit), and what `emailRedirectTo` must be.
+- Email confirmation as a loop you can actually test locally (Mailpit), and why the `token_hash` template needs no `emailRedirectTo`.
 - Error copy that does not leak account existence.
 
 **Build**
 - Sign-up, sign-in, sign-out — each a Server Action behind a form
-- Confirmation via Mailpit, with the redirect URL configured in `config.toml`
+- Confirmation via Mailpit, with `enable_confirmations` and `site_url` set in `config.toml`
 - One protected route (`/account`) showing the session
 - Header that reflects signed-in versus signed-out state
 
 **Verify**
-- Full loop end to end: sign up → read the confirmation mail in Mailpit → confirm → sign in → `/account` renders → sign out → `/account` redirects.
+- Full loop: sign up → read the mail in Mailpit → click → `/account` renders, already signed in, because `verifyOtp` hands the Route Handler a session → sign out lands on `/` → sign in returns to `/account`.
+- Clicking the same link twice lands on `/auth/error`.
 - Wrong password produces the same message as unknown email.
 - An unconfirmed account cannot sign in, and says why.
 
 **Record** — lab note: the full loop as an ordered checklist, plus the redirect-URL misconfiguration and its silent failure mode.
+
+> Closed in [#5](https://github.com/BIGboss248/supabase-nextjs-lab/issues/5) — **Decide the auth flow and the protected-route surface**: sign-up ends inline in a check-email state; confirmation runs through a `token_hash` Route Handler at `/auth/confirm`, which needs `enable_confirmations = true` in the local `config.toml` because local dev defaults it off, and needs no `emailRedirectTo` at all; failures return `{ error: AppErrorKind }` while success calls `redirect()`; a dead link lands on `/auth/error`; sign-out lives in the header and lands on `/`; `/account` shows the email and `sub`; a duplicate sign-up is indistinguishable from a new one and only logs `conflict`.
 
 ---
 
