@@ -8,6 +8,8 @@ A learning roadmap, not a product spec. Seven phases; each carries four blocks:
 - **Record** — what lands in the Obsidian vault when the phase closes
 
 > **Status: v0.** Written from the decisions locked in [the map](https://github.com/BIGboss248/supabase-nextjs-lab/issues/1). Refined as tickets close; the map is authoritative when this file and an issue disagree.
+>
+> **Live status lives in the phase tasks on the map**, one `wayfinder:task` per phase, chained by native blocking: [#15](https://github.com/BIGboss248/supabase-nextjs-lab/issues/15) → [#16](https://github.com/BIGboss248/supabase-nextjs-lab/issues/16) → [#17](https://github.com/BIGboss248/supabase-nextjs-lab/issues/17) → [#18](https://github.com/BIGboss248/supabase-nextjs-lab/issues/18) → [#19](https://github.com/BIGboss248/supabase-nextjs-lab/issues/19). Tick boxes there, not here; this file stays the curriculum.
 
 ## What this is
 
@@ -42,6 +44,8 @@ These are settled. Do not re-open them mid-phase; if one is wrong, that is a new
 
 ## Phase 1 — Toolchain and the local stack
 
+**Status** — landed on `main`: scaffold `2d4826c`, Sentry `8cc5852`, lint rule `6e0fb69`, docs `b5b8daf`. Every Verify bullet was checked on 2026-11-18.
+
 **Learn**
 - What the local Supabase stack actually is: Postgres, GoTrue (auth), PostgREST (data API), Realtime, Storage, Studio, Mailpit — and which port each owns.
 - Why the CLI is a devDependency rather than a global install, and what `supabase init` writes into the repo.
@@ -71,6 +75,8 @@ Sources: [Local development with the CLI](https://supabase.com/docs/guides/local
 ---
 
 ## Phase 2 — Schema, RLS, and seed data
+
+**Status** — landed on `main` in `c1b725f`; every Verify bullet was checked on 2026-11-18.
 
 **Learn**
 - Row Level Security as default-deny: a table with RLS on and no policy returns nothing, to everyone.
@@ -104,6 +110,8 @@ Sources: [Row Level Security](https://supabase.com/docs/guides/database/postgres
 
 ## Phase 3 — Ports and adapters
 
+**Tracked in** [#15 Phase 3 - Finish ports and adapters](https://github.com/BIGboss248/supabase-nextjs-lab/issues/15) — core types landed in `67e38c7`; the schemas, both adapters and the contract suite remain.
+
 **Learn**
 - Contract-first design: define what callers need, then satisfy it, instead of exposing whatever the database happens to return.
 - Why `PostgrestError` must not cross the adapter boundary, and what a domain-shaped error taxonomy buys you.
@@ -130,6 +138,8 @@ Sources: [Row Level Security](https://supabase.com/docs/guides/database/postgres
 ---
 
 ## Phase 4 — SSR auth wiring
+
+**Tracked in** [#16 Phase 4 - Wire SSR auth](https://github.com/BIGboss248/supabase-nextjs-lab/issues/16).
 
 **Learn**
 - Cookie-based sessions versus `localStorage`: why the server needs the token in a cookie to render authenticated HTML.
@@ -161,6 +171,8 @@ Sources: [Server-side auth](https://supabase.com/docs/guides/auth/server-side), 
 
 ## Phase 5 — Auth flows and the protected route
 
+**Tracked in** [#17 Phase 5 - Build the auth flows and the protected route](https://github.com/BIGboss248/supabase-nextjs-lab/issues/17).
+
 **Learn**
 - Server Actions as the mutation surface: what they replace, and how they interact with forms and progressive enhancement.
 - Email confirmation as a loop you can actually test locally (Mailpit), and why the `token_hash` template needs no `emailRedirectTo`.
@@ -185,6 +197,8 @@ Sources: [Server-side auth](https://supabase.com/docs/guides/auth/server-side), 
 ---
 
 ## Phase 6 — Listing, detail, and realtime
+
+**Tracked in** [#18 Phase 6 - Build the listing, detail and realtime](https://github.com/BIGboss248/supabase-nextjs-lab/issues/18).
 
 **Learn**
 - RSC data fetching: the component awaits the port directly, and there is no client-side loading state for the initial render.
@@ -223,6 +237,8 @@ Sources: `docs/research/supabase-realtime-rls.md`.
 ---
 
 ## Phase 7 — Quality gates and CI/CD
+
+**Tracked in** [#19 Phase 7 - Quality gates and CI/CD](https://github.com/BIGboss248/supabase-nextjs-lab/issues/19); [#12 Provision the hosted Supabase project and CI secrets](https://github.com/BIGboss248/supabase-nextjs-lab/issues/12) also blocks the deploy half.
 
 **Learn**
 - What each test layer buys you, and which layer earns its cost here. With a fake adapter, business logic is cheap to test; RLS and cookies are not.
