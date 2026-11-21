@@ -240,13 +240,13 @@ Sources: `docs/research/supabase-realtime-rls.md`.
 
 ## Phase 7 — Quality gates and CI/CD
 
-**Tracked in** [#19 Phase 7 - Quality gates and CI/CD](https://github.com/BIGboss248/supabase-nextjs-lab/issues/19); [#12 Provision the hosted Supabase project and CI secrets](https://github.com/BIGboss248/supabase-nextjs-lab/issues/12) also blocks the deploy half.
+**Tracked in** [#19 Phase 7 - Quality gates and CI/CD](https://github.com/BIGboss248/supabase-nextjs-lab/issues/19). The deploy half moved out of CI: Supabase's GitHub integration runs migrations on push to `main`, so this phase is tests and gates only.
 
 **Learn**
 - What each test layer buys you, and which layer earns its cost here. With a fake adapter, business logic is cheap to test; RLS and cookies are not.
 - Local↔CI parity: what runs on save, pre-push, and in CI, and why they differ.
-- `supabase db push` and drift: how a migration reaches a hosted project, and how deploy-on-merge can diverge from your local schema.
-- Secrets management: which values are repository-level and which are environment-level.
+- How a migration reaches a hosted project when Supabase deploys it rather than your workflow: the integration runs clone → migrate on every push to the production branch, and drift becomes a manual `db diff --linked` because the repo holds no credentials.
+- Where credentials are *not* needed, and what that costs: no secret to leak, but no pre-merge check of a migration either, unless branching is on.
 
 Sources: `docs/research/supabase-cli-ci.md`.
 
@@ -256,19 +256,18 @@ Sources: `docs/research/supabase-cli-ci.md`.
 - A Playwright E2E covering signup → Mailpit → confirm → `/account`, sign-out, and the protected route
 - `.github/workflows/ci.yml` — the PR quality gate: `typecheck`, `lint`, `build`, then `db start`, `db lint --fail-on error`, `db diff --strict-coverage`
 - A full-stack job on a `full-stack` label and nightly, running contract-real, pgTAP and Playwright against one started stack
-- `.github/workflows/deploy-db.yml` — migrations on `main`, triggered only by changes under `supabase/`
-- A hosted project, linked, with secrets set
+- A pre-push hook running lint, typecheck, unit and contract
 
 **Verify**
 - A deliberately failing test fails the PR, and a red PR cannot merge.
 - The pre-push hook catches a failing lint, typecheck or unit test before it reaches CI, and finishes fast enough that `--no-verify` never looks tempting.
 - The `full-stack` job fails on a broken policy, a broken confirmation link, or a broken selector — each step independently, after one stack startup.
-- Merging a migration to `main` pushes it to the hosted project, and re-running the job is a no-op rather than an error.
-- Local schema and hosted schema agree: `supabase db diff --linked` is empty.
+- Merging a migration to `main` applies it to the hosted project with no repo secret; `5bf2de3` was the first such push.
+- Local and hosted schema can be compared by hand: `supabase db diff --linked` needs the credentials the repo deliberately no longer holds.
 
 **Record** — lab note: the pipeline diagram in text, the pinned versions, the drift mistake, and the free-tier limits you actually hit.
 
-> Open tickets: hosted provisioning (#12).
+> Closed in [#12 Provision the hosted Supabase project and CI secrets](https://github.com/BIGboss248/supabase-nextjs-lab/issues/12) — **by substitution**: the GitHub integration authorises a GitHub App and runs the migration on push to `main`, so no personal access token, no `supabase link`, and no repository secrets exist. Verified after the Phase 4 merge: `products` answered `200 []`, anonymous `INSERT` answered `401`, `sell_one_unit` answered `42501`. The cost is named rather than hidden: `seed.sql` does not reach a persistent branch, and drift needs a manual credentialed check. The deploy workflow is dropped from this phase's scope.
 >
 > Closed in [#9](https://github.com/BIGboss248/supabase-nextjs-lab/issues/9) — **Decide the test strategy and quality gates**: Jest via `next/jest`, one runner only; four thin layers (unit on the fake, contract against both adapters, component on presentational pieces, E2E on the auth loop); the Supabase half gated by `SUPABASE_CONTRACT=1` and reported as skipped; pgTAP for RLS and `sell_one_unit`, never on the PR path because it needs a full stack plus `pg_prove`; E2E reuses a local stack and, in CI, shares one experimental-path stack with the contract-real and pgTAP steps on a `full-stack` label and nightly; pre-push is lint plus typecheck plus unit plus contract, which overrides the vault's unit-and-E2E shape; retries twice with a trace on the first retry and no coverage threshold; the untested list is named rather than assumed.
 
