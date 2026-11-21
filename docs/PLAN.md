@@ -141,7 +141,7 @@ Sources: [Row Level Security](https://supabase.com/docs/guides/database/postgres
 
 ## Phase 4 — SSR auth wiring
 
-**Tracked in** [#16 Phase 4 - Wire SSR auth](https://github.com/BIGboss248/supabase-nextjs-lab/issues/16).
+**Status** — landed on `main` in `5bf2de3`; three of six Verify bullets moved to Phase 5, which owns the sign-in form that makes them observable.
 
 **Learn**
 - Cookie-based sessions versus `localStorage`: why the server needs the token in a cookie to render authenticated HTML.
@@ -158,14 +158,14 @@ Sources: [Server-side auth](https://supabase.com/docs/guides/auth/server-side), 
 - `AuthService` implemented against the server client
 
 **Verify**
-- Signing in sets `sb-*` cookies; a page reload keeps the session.
-- Deleting the cookie logs you out on the next request.
 - The server resolves identity from `claims.sub` — not `user.id`, which does not exist on a claims object.
-- Two tabs refreshing at once do not sign you out.
 - The token never appears in a client bundle.
 - The proxy matcher covers every route that reads auth state.
+- Sign-in sets `sb-*` cookies and a reload keeps the session; deleting the cookie signs you out; two tabs refresh without signing you out. All three need the Phase 5 forms, so they are verified there.
 
 **Record** — `SupaBase.md`: the `getUser`/`getSession` distinction and the cookie-write constraint. Lab note: the **Next 16 `middleware.ts` → `proxy.ts` rename**, since every tutorial you find predates it.
+
+> Closed in [#16 Phase 4 - Wire SSR auth](https://github.com/BIGboss248/supabase-nextjs-lab/issues/16) — one request-scoped client behind the `server-only` door feeding both `getCatalog()` and `getAuth()`; `proxy.ts` refreshes and never redirects, and applies the second `setAll` argument's cache headers; identity comes from `claims.sub`, and a stale cookie reads as `ok(null)` rather than an error; a browser factory waits for Phase 6. The three cookie checks moved to [#17 Phase 5 - Build the auth flows and the protected route](https://github.com/BIGboss248/supabase-nextjs-lab/issues/17) rather than blocking it, since a check that needs a form cannot gate the phase that builds the form.
 
 > Closed in [#5](https://github.com/BIGboss248/supabase-nextjs-lab/issues/5) — **Decide the auth flow and the protected-route surface**: the session guard lives in `/account` and the proxy only refreshes; the matcher stays broad because Server Actions are POSTs to their own route; `AuthService` gains `confirmEmail`, an addendum on [#3](https://github.com/BIGboss248/supabase-nextjs-lab/issues/3).
 
@@ -191,6 +191,7 @@ Sources: [Server-side auth](https://supabase.com/docs/guides/auth/server-side), 
 - Clicking the same link twice lands on `/auth/error`.
 - Wrong password produces the same message as unknown email.
 - An unconfirmed account cannot sign in, and says why.
+- The three cookie checks inherited from Phase 4: sign-in sets `sb-*` cookies and a reload keeps the session; deleting the cookie signs you out on the next request; two tabs refreshing at once do not sign you out.
 
 **Record** — lab note: the full loop as an ordered checklist, plus the redirect-URL misconfiguration and its silent failure mode.
 
