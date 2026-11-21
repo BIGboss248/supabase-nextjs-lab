@@ -173,7 +173,7 @@ Sources: [Server-side auth](https://supabase.com/docs/guides/auth/server-side), 
 
 ## Phase 5 — Auth flows and the protected route
 
-**Status** — built and verified on 2026-11-21 against the local stack; every Build and Verify bullet in #17 is checked. The work is uncommitted in the working tree, per the repo's no-commit rule.
+**Status** — landed on `main` in `2b719cb`; every Build and Verify bullet in #17 was checked against the local stack on 2026-11-21.
 
 **Tracked in** [#17 Phase 5 - Build the auth flows and the protected route](https://github.com/BIGboss248/supabase-nextjs-lab/issues/17).
 
