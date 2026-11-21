@@ -110,7 +110,7 @@ Sources: [Row Level Security](https://supabase.com/docs/guides/database/postgres
 
 ## Phase 3 — Ports and adapters
 
-**Tracked in** [#15 Phase 3 - Finish ports and adapters](https://github.com/BIGboss248/supabase-nextjs-lab/issues/15) — core types landed in `67e38c7`; the schemas, both adapters and the contract suite remain.
+**Status** — landed on `main`: core types `67e38c7`, schemas, adapters and contract suite `a8c35ad`. 25/25 tests pass with `SUPABASE_CONTRACT=1` against the local stack; 19 pass and 6 skip with Docker stopped.
 
 **Learn**
 - Contract-first design: define what callers need, then satisfy it, instead of exposing whatever the database happens to return.
@@ -132,6 +132,8 @@ Sources: [Row Level Security](https://supabase.com/docs/guides/database/postgres
 - Browsing `src/` shows exactly two places that know Supabase exists.
 
 **Record** — lab note: the seam, why two ports and not five, and the concrete cost of the alternative (thin repositories leaking Supabase types into every caller).
+
+> Closed in [#15 Phase 3 - Finish ports and adapters](https://github.com/BIGboss248/supabase-nextjs-lab/issues/15) — one row schema strips PostgREST's snake_case, `published` and timestamps and transforms to the DTO, so a bad row fails once at the boundary as `AppError` `validation`; the Supabase adapter sits behind the single `server-only` door and maps resolved PostgREST errors onto `AppError`; the fake models stock but not RLS; one contract suite runs against both, its Supabase half gated so unit tests need no Docker.
 
 > Closed in [#3](https://github.com/BIGboss248/supabase-nextjs-lab/issues/3) — **Define the port signatures and error taxonomy**: seven methods across two ports; one `Product` DTO with no `published` field; nine-variant `AppError` with diagnostic messages and UI-owned copy; Zod parsing inside the adapter; a request-scoped, cookie-bound factory behind a single `server-only` door; a fake that models stock rules but not RLS; one contract suite with a gated Supabase half. File names follow [ADR 0001](adr/0001-file-naming-conventions.md), which supersedes the kebab-case paths in that resolution and nothing else.
 
