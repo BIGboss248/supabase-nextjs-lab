@@ -19,13 +19,25 @@ export type SignInInput = {
  * `type=email` from the URL (#5 Decide the auth flow and the protected-route
  * surface).
  */
-export type EmailOtpType =
-  | "signup"
-  | "invite"
-  | "magiclink"
-  | "recovery"
-  | "email_change"
-  | "email";
+export const EMAIL_OTP_TYPES = [
+  "signup",
+  "invite",
+  "magiclink",
+  "recovery",
+  "email_change",
+  "email",
+] as const;
+
+export type EmailOtpType = (typeof EMAIL_OTP_TYPES)[number];
+
+/**
+ * Narrows an untrusted query parameter. The Route Handler runs what arrives in
+ * the URL through this before the adapter sees it, so a hand-edited `type`
+ * cannot reach `verifyOtp`.
+ */
+export function isEmailOtpType(value: string): value is EmailOtpType {
+  return (EMAIL_OTP_TYPES as readonly string[]).includes(value);
+}
 
 export type ConfirmEmailInput = {
   /** The `token_hash` the emailed link carries; single-use. */

@@ -173,6 +173,8 @@ Sources: [Server-side auth](https://supabase.com/docs/guides/auth/server-side), 
 
 ## Phase 5 — Auth flows and the protected route
 
+**Status** — built and verified on 2026-11-21 against the local stack; every Build and Verify bullet in #17 is checked. The work is uncommitted in the working tree, per the repo's no-commit rule.
+
 **Tracked in** [#17 Phase 5 - Build the auth flows and the protected route](https://github.com/BIGboss248/supabase-nextjs-lab/issues/17).
 
 **Learn**
@@ -196,6 +198,8 @@ Sources: [Server-side auth](https://supabase.com/docs/guides/auth/server-side), 
 **Record** — lab note: the full loop as an ordered checklist, plus the redirect-URL misconfiguration and its silent failure mode.
 
 > Closed in [#5](https://github.com/BIGboss248/supabase-nextjs-lab/issues/5) — **Decide the auth flow and the protected-route surface**: sign-up ends inline in a check-email state; confirmation runs through a `token_hash` Route Handler at `/auth/confirm`, which needs `enable_confirmations = true` in the local `config.toml` because local dev defaults it off, and needs no `emailRedirectTo` at all; failures return `{ error: AppErrorKind }` while success calls `redirect()`; a dead link lands on `/auth/error`; sign-out lives in the header and lands on `/`; `/account` shows the email and `sub`; a duplicate sign-up is indistinguishable from a new one and only logs `conflict`.
+
+> Closed in [#17 Phase 5 - Build the auth flows and the protected route](https://github.com/BIGboss248/supabase-nextjs-lab/issues/17) — the three actions live in `src/app/auth/AuthActions.ts` and return an error kind while `redirect()` does the navigating; the local confirmation template at `supabase/templates/confirmation.html` links `{{ .TokenHash }}` at `/auth/confirm`, because GoTrue's built-in `/verify` returns the session in a fragment the server never sees; `site_url` had to become the same origin as the address bar (`localhost`, not `127.0.0.1`) or the cookies land on the wrong host and the visitor stays signed out with no error. Two facts the plan did not predict: GoTrue throttles an immediate duplicate sign-up with a 60-second resend cooldown before it can answer with the obfuscated duplicate, so the contract asserts only "never a success" and the fake pins `conflict`; and `getClaims()` reading `Date.now()` makes Cache Components reject the session read unless the component calls `await connection()` behind its `<Suspense>` boundary.
 
 ---
 

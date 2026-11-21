@@ -19,6 +19,18 @@ describeAuthServiceContract("FakeAuthService", {
 describe("FakeAuthService confirmation loop", () => {
   const password = "lab-password-1";
 
+  it("names a duplicate sign-up a conflict", async () => {
+    const auth = new FakeAuthService({ confirmationsRequired: true });
+    const email = "twice@example.test";
+    await auth.signUp({ email, password });
+
+    const second = await auth.signUp({ email, password });
+
+    expect(second.ok).toBe(false);
+    if (second.ok) return;
+    expect(second.error.kind).toBe("conflict");
+  });
+
   it("refuses sign-in until the address is confirmed, then returns the identity", async () => {
     const auth = new FakeAuthService({ confirmationsRequired: true });
     const email = "confirm-me@example.test";
